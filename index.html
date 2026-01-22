@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZARA | NETWORK</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            /* CHANGE THIS URL TO YOUR IMAGE */
+            --bg-image: url('background.jpg');
+            --tint-color: rgba(0, 0, 0, 0.75); /* Adjust the 0.75 to make it darker/lighter */
+            --holo-white: #ffffff;
+            --holo-green: #00ff7f;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        /* The Tinted Background Layer */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(var(--tint-color), var(--tint-color)), var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            z-index: -1;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Animated Holo Effect */
+        .logo {
+            font-size: clamp(2rem, 8vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            position: relative;
+            background: linear-gradient(
+                90deg, 
+                var(--holo-white) 0%, 
+                var(--holo-green) 25%, 
+                var(--holo-white) 50%, 
+                var(--holo-green) 75%, 
+                var(--holo-white) 100%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: holo-shift 3s linear infinite;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 127, 0.4));
+        }
+
+        @keyframes holo-shift {
+            to { background-position: 200% center; }
+        }
+
+        .coming-soon {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            color: white;
+            opacity: 0.8;
+            letter-spacing: 4px;
+            font-weight: 300;
+        }
+
+        /* Buttons Bar */
+        .button-bar {
+            margin-top: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(0, 255, 127, 0.3);
+            padding: 12px 28px;
+            border-radius: 5px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background: var(--holo-green);
+            color: black;
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 255, 127, 0.4);
+        }
+
+        .btn i { font-size: 1.3rem; }
+
+        footer {
+            position: absolute;
+            bottom: 30px;
+            font-size: 0.75rem;
+            color: white;
+            opacity: 0.4;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-overlay"></div>
+
+    <div class="container">
+        <div class="logo">ZARA | NETWORK</div>
+        <div class="coming-soon">COMING SOON</div>
+
+        <div class="button-bar">
+            <a href="#" class="btn"><i class="fa-solid fa-biohazard"></i> ZOMBOID</a>
+            <a href="https://discord.gg/S5VnfSFyXQ" class="btn"><i class="fa-brands fa-discord"></i> DISCORD</a>
+            <a href="https://steamcommunity.com/groups/ZARANETWORK" class="btn"><i class="fa-brands fa-steam"></i> STEAM</a>
+        </div>
+
+        <footer>
+            &copy; 2025 ZARA NETWORK | ALL RIGHTS RESERVED
+        </footer>
+    </div>
+
+</body>
+</html>
