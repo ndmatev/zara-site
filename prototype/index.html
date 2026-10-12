@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en"><head>
+<base href="/prototype/">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MyBudget">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E8EEF0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A171C" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>MyBudget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+<style>
+/* Layout: centered 390px phone frame on wide screens, full-bleed on phones. Scrolling content area + fixed bottom tab bar. Manrope backs both faces for Cyrillic. */
+:root{
+  --bg:#E8EEF0; --surface:#FFFFFF; --ink:#0E2A33; --muted:#5C7580; --line:#D5E0E4;
+  --accent:#0A7B74; --accent-ink:#FFFFFF; --soft:#DDF1EE; --warn:#C2410C; --warn-soft:#FDE9DD; --ok:#15803D; --red:#D92D20;
+  --font-display:"Bricolage Grotesque","Manrope","DM Sans",system-ui,sans-serif;
+  --font-body:"DM Sans","Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A171C; --surface:#12262D; --ink:#E6F0F2; --muted:#8FA8B1; --line:#1F3A43;
+  --accent:#3CC4B9; --accent-ink:#06211F; --soft:#14403F; --warn:#FB923C; --warn-soft:#3B2214; --ok:#4ADE80; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A171C; --surface:#12262D; --ink:#E6F0F2; --muted:#8FA8B1; --line:#1F3A43;
+  --accent:#3CC4B9; --accent-ink:#06211F; --soft:#14403F; --warn:#FB923C; --warn-soft:#3B2214; --ok:#4ADE80; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+#stage{height:100%;display:flex;align-items:center;justify-content:center;padding-inline:0}
+#app{position:relative;width:100%;max-width:420px;height:100%;max-height:860px;background:var(--bg);overflow:hidden;display:flex;flex-direction:column}
+@media (min-width:600px){#stage{padding:16px}#app{border-radius:36px;border:1px solid var(--line);box-shadow:0 20px 60px rgba(14,42,51,.18);height:min(840px,100%)}}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:20px 16px 24px;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:30px;font-weight:800;line-height:1.1}
+h2{font-size:20px;font-weight:800}
+h3{font-size:16px;font-weight:600}
+.muted{color:var(--muted)}
+.label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.num{font-variant-numeric:tabular-nums}
+.row{display:flex;align-items:center;gap:12px;min-width:0}
+.grow{flex:1;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.hero{background:var(--accent);color:var(--accent-ink);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.hero .big{font-family:var(--font-display);font-weight:800;font-size:40px;line-height:1.05;font-variant-numeric:tabular-nums}
+.hero .label{color:inherit;opacity:.8}
+.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:700;cursor:pointer;background:var(--accent);color:var(--accent-ink);min-height:44px}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.danger{background:var(--warn-soft);color:var(--warn)}
+.btn.sm{padding:8px 12px;min-height:36px;font-size:13px;border-radius:12px}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible,.tab:focus-visible,input:focus-visible,select:focus-visible,.tip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pill{font-size:11px;font-weight:700;border-radius:99px;padding:3px 9px;background:var(--soft);color:var(--accent);white-space:nowrap}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.ico{width:40px;height:40px;border-radius:12px;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-family:var(--font-display);flex:none}
+.ico.emo{font-size:20px;line-height:1;font-family:system-ui,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;background:var(--soft)}
+.ico.avatar{font-size:18px}
+.avatar.lg{width:72px;height:72px;font-size:28px}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.bar.over>i{background:var(--warn)}
+.amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.neg{color:var(--ink)}.pos{color:var(--ok)}
+.tabbar{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+.tab{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;font-size:10.5px;font-weight:700;letter-spacing:.03em;color:var(--muted);cursor:pointer;border-radius:12px;min-height:52px;min-width:0}
+.tab span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="true"]{color:var(--accent)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input,.field select{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:44px;width:100%}
+.auth{padding:24px 20px 32px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;flex:1}
+.brand{font-family:var(--font-display);font-weight:800;font-size:22px;color:var(--accent)}
+.sheet-bg{position:absolute;inset:0;background:rgba(5,15,18,.55);display:flex;align-items:flex-end;z-index:5}
+.sheet{width:100%;background:var(--surface);border-radius:24px 24px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;max-height:88%;overflow-y:auto}
+.tip{display:flex;align-items:center;gap:12px;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;cursor:pointer}
+.tip:hover{border-color:var(--accent)}
+.note{font-size:12px;color:var(--muted)}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin-block:4px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{aspect-ratio:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.tile:hover{border-color:var(--accent)}
+.tile:focus-visible,.chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile .emo{font-size:26px;line-height:1;font-family:system-ui,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.icobtn{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;flex:none;font-size:22px;line-height:1}
+.icobtn.sm{width:36px;height:36px;border-radius:12px;font-size:20px}
+.icobtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icobtn:focus-visible,.switch:focus-visible,.linkrow:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.linkrow{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-top:1px solid var(--line);padding:14px 0 0;cursor:pointer;text-align:left;font-weight:500}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:700;text-decoration:underline;cursor:pointer;font:inherit;font-weight:700}
+.check-row{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4}
+.check-row input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--accent);flex:none}
+.langtable{width:100%;border-collapse:collapse}
+.langtable td{padding:0;border-top:1px solid var(--line)}
+.langtable tr:first-child td{border-top:0}
+.langbtn{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:14px 0;cursor:pointer;text-align:left;min-height:52px}
+.langbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.code{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--accent);background:var(--soft);border-radius:8px;padding:4px 8px;width:36px;text-align:center;flex:none}
+.check{color:var(--accent);font-weight:800;font-size:18px}
+.switch{width:56px;height:32px;border-radius:99px;border:0;background:var(--line);position:relative;cursor:pointer;flex:none}
+.switch i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);display:grid;place-items:center;font-size:15px;line-height:1;font-style:normal;font-family:system-ui,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"] i{left:27px}
+.btn.logout{background:var(--red);color:#fff;width:100%}
+.foot{text-align:center;font-size:12px;color:var(--muted);padding-top:4px}
+.banner{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:8px 12px;font-size:12px;font-weight:500}
+ul.clean{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.preview{width:96px;height:96px;border-radius:50%;object-fit:cover;align-self:center}
+@media (prefers-reduced-motion:no-preference){.bar>i{transition:width .4s ease}.switch i{transition:left .2s ease}}
+</style>
+<div id="stage"><div id="app"></div></div>
+<script>
+(function(){
+var DEMO_CODE="123456";
+var L={
+en:{
+  heroReg:"Know where your money goes.",heroLogin:"Welcome back.",
+  subReg:"Create an account, link your banks and keep every subscription in one place.",subLogin:"Log in to see your balance and subscriptions.",
+  banner:"Prototype: nothing here connects to a real bank. Data is sample data.",
+  name:"Name",yourName:"Your name",email:"Email",password:"Password",pwPh:"At least 6 characters",
+  phone:"Phone number",phoneHint:"We send a code to this number to protect your account (2FA).",
+  country:"Country",countryHint:"Sets your currency and regional info automatically.",
+  accept:"I accept the",and:"and",acceptTos:"Terms of Service",acceptPriv:"Privacy Policy",
+  create:"Create account",login:"Log in",haveAcc:"I already have an account",newAcc:"Create a new account",
+  errEmail:"Enter a valid email address.",errPw:"Password needs at least 6 characters.",errName:"Enter your name.",errNoAcc:"No account with that email in this browser. Create one first.",
+  errPhone:"Enter a valid phone number with the country code.",errTos:"You need to accept the Terms of Service and the Privacy Policy.",
+  verifyTitle:"Check your phone",verifyBody:"We sent a 6-digit code to {p}.",verifyDemo:"Prototype: use the code 123456.",code:"Verification code",verifyBtn:"Verify",errCode:"That code is not correct. Try again.",backBtn:"Back",
+  hello:"Hello, {n}",overview:"Overview",settings:"Settings",totalBalance:"Total balance",
+  bank1:"{n} bank linked",bankN:"{n} banks linked",noBank:"No bank linked yet",yourBanks:"Your banks",notLinked:"Not linked",unlink:"Unlink",link:"Link",
+  addBank:"Link a bank",bankName:"Bank name",bankNamePh:"e.g. Revolut, UniCredit",iban:"IBAN",
+  bankNote:"In the real app you approve access on your bank's own page and we never see your bank password. This prototype adds a sample account instead.",errBank:"Enter the bank name and a valid IBAN.",addBankBtn:"Add bank",
+  recent:"Recent transactions",viewAll:"View all",allTx:"All transactions",linkToSee:"Link a bank to see your transactions.",
+  today:"Today",yesterday:"Yesterday",
+  cFood:"Food",cSub:"Subscription",cComm:"Communal",cIncome:"Income",cTrans:"Transport",
+  txElec:"Electricity bill",txWater:"Water supply",txSalary:"Salary",txHeat:"Heating",txPhone:"Mobile plan",txPharm:"Pharmacy",
+  tabHome:"HOME",tabBudget:"BUDGET",tabSavings:"SAVINGS",tabServices:"SERVICES",
+  budget:"Budget",spent:"Spent this month",ofx:"of {x}",byCat:"By category",
+  catFood:"Food",catComm:"Communal bills",catTrans:"Transport",catOther:"Other",nearLimit:"Near limit",
+  subs:"Subscriptions",perMo:"/mo",renews:"renews {d}",cancelled:"Cancelled",cancel:"Cancel",cancelNote:"Cancelling is simulated in this prototype.",
+  addSub:"Add subscription",subName:"Service name",subNamePh:"e.g. Disney+",subPrice:"Price per month",subNext:"Next payment date",errSub:"Enter a name and a price.",addShort:"Add",
+  goals:"Goals",savings:"Savings",saved:"Saved so far",gEmerg:"Emergency fund",gTrip:"Summer trip",aOfB:"{a} of {b}",
+  newFund:"New savings fund",fundName:"Fund name",fundNamePh:"e.g. New laptop",fundTarget:"Target amount",errFund:"Enter a name and a target amount.",createFund:"Create fund",
+  addTo:"Add to {n}",howMuch:"How much do you want to add?",amountBox:"Amount",remaining:"Left to reach your goal: {x}",goalReached:"Goal reached",confirmAdd:"Add to fund",errAmt:"Enter an amount above zero.",
+  learn:"Learn",services:"Services",
+  tSaving:"Saving tips",tSavingSub:"Small habits that add up",tMoney:"Money management tips",tMoneySub:"Plan, track and stay in control",tInvest:"Investment tips",tInvestSub:"The basics before you start",
+  backSvc:"Back to services",tLoan:"Loan calculator",tSalary:"Salary calculator",tFeedback:"Feedback",
+  loanTitle:"Loan calculator",loanHint:"Estimate a monthly payment. The rates below are examples for Bulgaria; check your bank's offer.",
+  lType:"Loan type",lConsumer:"Consumer",lMortgage:"Mortgage",lCar:"Car",lAmount:"Loan amount",lYears:"Term (years)",lRate:"Interest rate (% per year)",lFee:"One-time fee (%)",
+  lMonthly:"Monthly payment",lInterest:"Total interest",lFeeAmt:"Fee",lTotal:"Total to repay (with fee)",lEmpty:"Enter an amount and a term.",
+  lNote:"This is an estimate, not a bank offer. The APR (ГПР) your bank shows also includes other costs.",
+  salTitle:"Salary calculator",salHint:"Enter your monthly net salary and see a simple plan for your money.",salInput:"Monthly net salary",salFixedIn:"Your fixed expenses per month (optional)",
+  salFreedom:"Freedom number",salFreedomD:"Invested money you would need to stop working (salary × 150)",
+  salInvest:"Minimum to invest each month",salInvestD:"10% of your salary",
+  salEmerg:"Emergency fund",salEmergD:"6 months of salary (salary × 6)",
+  salFun:"Fun money",salFunD:"20% to spend on yourself without guilt",
+  salFixed:"Fixed expenses limit",salFixedD:"70% for rent, bills, food and subscriptions",
+  salOk:"Your fixed expenses are within the 70% limit. Good.",
+  salOver:"Your fixed expenses are {x} over the 70% limit ({p}% of your salary). Try cutting subscriptions, switching your electricity or internet provider, or lowering rent or food costs.",
+  salEmpty:"Enter your salary to see the plan.",salNote:"Rules of thumb for planning, not personal financial advice.",
+  fbTitle:"Rate MyBudget",fbBody:"In the published app this button opens the App Store (iPhone) or Google Play (Android) so you can leave a rating and a comment. It is not connected in this prototype.",
+  back:"Back to overview",backSet:"Back to settings",account:"Account",you:"You",linkedBanks:"Linked banks",
+  editProfile:"Edit profile",profileTitle:"Profile",username:"Username",photo:"Profile picture",change:"Change",
+  secure:"Changes to your profile are confirmed with a code sent to your phone.",
+  regional:"Regional settings",currencyLine:"Currency: {c}",vatLine:"Standard VAT about {v}%",noVat:"No national VAT; sales tax differs by state",regNote:"Sample amounts are not converted when you change currency.",
+  chTitleName:"Change username",chTitleEmail:"Change email",chTitlePhoto:"Change profile picture",chTitleCountry:"Change country",
+  wName:"Your username changes everywhere in the app.",
+  wEmail:"Your email is also your login. After this change you must log in with the new address, and security notices will go there.",
+  wPhoto:"Choose a clear photo of yourself. It will be shown in your profile.",
+  wCountry:"Changing your country updates your currency, number format and regional tax info. Existing amounts are not converted.",
+  wCode:"For your security we send a code to your phone before saving.",
+  newName:"New username",newEmail:"New email",choosePhoto:"Choose a photo",newCountry:"New country",cont:"Continue",verifySave:"Verify and save",savedOk:"Saved",errPhoto:"Choose a photo first.",
+  langLegal:"Language & legal",language:"Language",langHint:"Choose the app language.",tos:"Terms of Service",privacy:"Privacy Policy",legal:"Legal notice",
+  appearance:"Appearance",dark:"Dark mode",darkOn:"Dark theme is on",lightOn:"Light theme is on",logout:"Log out",
+  cancelQ:"Cancel {s}?",cancelBody:"You would save {x} a month. In this prototype nothing is sent to {s}; the subscription is only marked as cancelled here.",yesCancel:"Yes, cancel it",keep:"Keep it",done:"Done",
+  sample:"Sample text for the prototype. Replace it with terms reviewed by a lawyer before launch.",
+  tipsSaving:["Pay yourself first: move a fixed amount to savings on payday, before you spend.","Review subscriptions every month and cancel the ones you did not use.","Wait 48 hours before any non-essential purchase over {c50}.","Compare electricity and internet providers once a year."],
+  tipsMoney:["Split income into needs, wants and savings, for example 50 / 30 / 20.","Keep one month of expenses in an easy-access account before anything else.","Track food and bills weekly, not only at month end.","Pay off high-interest debt before you start investing."],
+  tipsInvest:["Build an emergency fund first, then invest money you will not need for 5 years or more.","Broad, low-cost index funds spread risk across many companies.","Invest a fixed amount regularly instead of trying to time the market.","This is general education, not personal financial advice."],
+  docTos:["By using MyBudget you agree to use the app only for your own personal finances and to keep your login details private.","MyBudget shows information from your linked banks and does not move money on your behalf.","Tips in the app are general education and are not personal financial advice."],
+  docPrivacy:["MyBudget reads your balance and transactions only after you approve access at your bank.","You can unlink a bank or delete your account at any time.","Your data is not sold to third parties."],
+  docLegal:["MyBudget is a product of zaranetwork.","All trademarks, such as Revolut, Netflix, Spotify, Amazon Prime and Uber One, belong to their owners."]
+},
+bg:{
+  heroReg:"Знай накъде отиват парите ти.",heroLogin:"Добре дошъл отново.",
+  subReg:"Създай профил, свържи банките си и дръж всички абонаменти на едно място.",subLogin:"Влез, за да видиш баланса и абонаментите си.",
+  banner:"Прототип: нищо тук не се свързва с реална банка. Данните са примерни.",
+  name:"Име",yourName:"Твоето име",email:"Имейл",password:"Парола",pwPh:"Поне 6 символа",
+  phone:"Телефонен номер",phoneHint:"Изпращаме код на този номер, за да защитим профила ти (2FA).",
+  country:"Държава",countryHint:"Задава автоматично валутата и регионалната информация.",
+  accept:"Приемам",and:"и",acceptTos:"Общите условия",acceptPriv:"Политиката за поверителност",
+  create:"Създай профил",login:"Вход",haveAcc:"Вече имам профил",newAcc:"Създай нов профил",
+  errEmail:"Въведи валиден имейл адрес.",errPw:"Паролата трябва да е поне 6 символа.",errName:"Въведи името си.",errNoAcc:"Няма профил с този имейл в този браузър. Първо създай такъв.",
+  errPhone:"Въведи валиден телефонен номер с кода на държавата.",errTos:"Трябва да приемеш Общите условия и Политиката за поверителност.",
+  verifyTitle:"Провери телефона си",verifyBody:"Изпратихме 6-цифрен код на {p}.",verifyDemo:"Прототип: използвай кода 123456.",code:"Код за потвърждение",verifyBtn:"Потвърди",errCode:"Кодът не е верен. Опитай отново.",backBtn:"Назад",
+  hello:"Здравей, {n}",overview:"Общ преглед",settings:"Настройки",totalBalance:"Общ баланс",
+  bank1:"{n} свързана банка",bankN:"{n} свързани банки",noBank:"Още няма свързана банка",yourBanks:"Твоите банки",notLinked:"Не е свързана",unlink:"Премахни",link:"Свържи",
+  addBank:"Свържи банка",bankName:"Име на банката",bankNamePh:"напр. Revolut, УниКредит",iban:"IBAN",
+  bankNote:"В реалното приложение одобряваш достъпа на страницата на банката и ние никога не виждаме паролата ти. Този прототип добавя примерна сметка.",errBank:"Въведи името на банката и валиден IBAN.",addBankBtn:"Добави банка",
+  recent:"Последни транзакции",viewAll:"Виж всички",allTx:"Всички транзакции",linkToSee:"Свържи банка, за да видиш транзакциите си.",
+  today:"Днес",yesterday:"Вчера",
+  cFood:"Храна",cSub:"Абонамент",cComm:"Битови сметки",cIncome:"Доход",cTrans:"Транспорт",
+  txElec:"Сметка за ток",txWater:"Водоснабдяване",txSalary:"Заплата",txHeat:"Парно",txPhone:"Мобилен план",txPharm:"Аптека",
+  tabHome:"НАЧАЛО",tabBudget:"БЮДЖЕТ",tabSavings:"СПЕСТЯВАНИЯ",tabServices:"УСЛУГИ",
+  budget:"Бюджет",spent:"Похарчено този месец",ofx:"от {x}",byCat:"По категории",
+  catFood:"Храна",catComm:"Битови сметки",catTrans:"Транспорт",catOther:"Други",nearLimit:"Близо до лимита",
+  subs:"Абонаменти",perMo:"/мес.",renews:"подновява се на {d}",cancelled:"Отказан",cancel:"Откажи",cancelNote:"Отказването е симулирано в този прототип.",
+  addSub:"Добави абонамент",subName:"Име на услугата",subNamePh:"напр. Disney+",subPrice:"Цена на месец",subNext:"Дата на следващото плащане",errSub:"Въведи име и цена.",addShort:"Добави",
+  goals:"Цели",savings:"Спестявания",saved:"Спестено досега",gEmerg:"Резервен фонд",gTrip:"Лятна почивка",aOfB:"{a} от {b}",
+  newFund:"Нов спестовен фонд",fundName:"Име на фонда",fundNamePh:"напр. Нов лаптоп",fundTarget:"Целева сума",errFund:"Въведи име и целева сума.",createFund:"Създай фонд",
+  addTo:"Добави към {n}",howMuch:"Колко искаш да добавиш?",amountBox:"Сума",remaining:"Остава до целта: {x}",goalReached:"Целта е постигната",confirmAdd:"Добави във фонда",errAmt:"Въведи сума над нула.",
+  learn:"Научи",services:"Услуги",
+  tSaving:"Съвети за спестяване",tSavingSub:"Малки навици, които се натрупват",tMoney:"Съвети за управление на парите",tMoneySub:"Планирай, следи и дръж контрол",tInvest:"Съвети за инвестиране",tInvestSub:"Основите, преди да започнеш",
+  backSvc:"Обратно към услугите",tLoan:"Кредитен калкулатор",tSalary:"Калкулатор за заплата",tFeedback:"Обратна връзка",
+  loanTitle:"Кредитен калкулатор",loanHint:"Изчисли приблизителна месечна вноска. Лихвите по-долу са примерни за България; провери офертата на банката си.",
+  lType:"Вид кредит",lConsumer:"Потребителски",lMortgage:"Ипотечен",lCar:"За автомобил",lAmount:"Сума на кредита",lYears:"Срок (години)",lRate:"Лихва (% годишно)",lFee:"Еднократна такса (%)",
+  lMonthly:"Месечна вноска",lInterest:"Общо лихва",lFeeAmt:"Такса",lTotal:"Общо за връщане (с таксата)",lEmpty:"Въведи сума и срок.",
+  lNote:"Това е приблизителна оценка, а не банкова оферта. ГПР, който показва банката, включва и други разходи.",
+  salTitle:"Калкулатор за заплата",salHint:"Въведи месечната си нетна заплата и виж прост план за парите си.",salInput:"Месечна нетна заплата",salFixedIn:"Твоите фиксирани разходи на месец (по желание)",
+  salFreedom:"Число на свободата",salFreedomD:"Инвестирани пари, нужни да спреш да работиш (заплата × 150)",
+  salInvest:"Минимум за инвестиране всеки месец",salInvestD:"10% от заплатата",
+  salEmerg:"Резервен фонд",salEmergD:"6 месечни заплати (заплата × 6)",
+  salFun:"Пари за забавление",salFunD:"20% за себе си, без угризения",
+  salFixed:"Лимит за фиксирани разходи",salFixedD:"70% за наем, сметки, храна и абонаменти",
+  salOk:"Фиксираните ти разходи са в рамките на лимита от 70%. Браво.",
+  salOver:"Фиксираните ти разходи надвишават лимита от 70% със {x} ({p}% от заплатата). Опитай да спреш абонаменти, да смениш доставчика на ток или интернет или да намалиш наема или разходите за храна.",
+  salEmpty:"Въведи заплатата си, за да видиш плана.",salNote:"Практически правила за планиране, а не личен финансов съвет.",
+  fbTitle:"Оцени MyBudget",fbBody:"В публикуваното приложение този бутон отваря App Store (iPhone) или Google Play (Android), за да оставиш оценка и коментар. В прототипа не е свързан.",
+  back:"Обратно към прегледа",backSet:"Обратно към настройките",account:"Профил",you:"Ти",linkedBanks:"Свързани банки",
+  editProfile:"Редактирай профила",profileTitle:"Профил",username:"Потребителско име",photo:"Профилна снимка",change:"Промени",
+  secure:"Промените в профила се потвърждават с код, изпратен на телефона ти.",
+  regional:"Регионални настройки",currencyLine:"Валута: {c}",vatLine:"Стандартен ДДС около {v}%",noVat:"Няма национален ДДС; данъкът върху продажбите е различен по щати",regNote:"Примерните суми не се преобразуват при смяна на валутата.",
+  chTitleName:"Смяна на потребителско име",chTitleEmail:"Смяна на имейл",chTitlePhoto:"Смяна на профилна снимка",chTitleCountry:"Смяна на държава",
+  wName:"Потребителското ти име се променя навсякъде в приложението.",
+  wEmail:"Имейлът ти е и твоят вход. След промяната трябва да влизаш с новия адрес и известията за сигурност ще идват там.",
+  wPhoto:"Избери ясна снимка на себе си. Тя ще се показва в профила ти.",
+  wCountry:"Смяната на държавата променя валутата, формата на числата и регионалната данъчна информация. Съществуващите суми не се преобразуват.",
+  wCode:"За твоя сигурност изпращаме код на телефона ти, преди да запазим.",
+  newName:"Ново потребителско име",newEmail:"Нов имейл",choosePhoto:"Избери снимка",newCountry:"Нова държава",cont:"Продължи",verifySave:"Потвърди и запази",savedOk:"Запазено",errPhoto:"Първо избери снимка.",
+  langLegal:"Език и правна информация",language:"Език",langHint:"Избери езика на приложението.",tos:"Общи условия",privacy:"Политика за поверителност",legal:"Правна информация",
+  appearance:"Външен вид",dark:"Тъмен режим",darkOn:"Тъмната тема е включена",lightOn:"Светлата тема е включена",logout:"Изход",
+  cancelQ:"Да откажем ли {s}?",cancelBody:"Ще спестяваш {x} месечно. В този прототип нищо не се изпраща към {s}; абонаментът само се отбелязва като отказан тук.",yesCancel:"Да, откажи го",keep:"Запази го",done:"Готово",
+  sample:"Примерен текст за прототипа. Замени го с текст, одобрен от юрист, преди пускане.",
+  tipsSaving:["Плати първо на себе си: прехвърли фиксирана сума в спестявания в деня на заплатата, преди да харчиш.","Преглеждай абонаментите всеки месец и отказвай тези, които не си ползвал.","Изчакай 48 часа преди всяка ненужна покупка над {c50}.","Сравнявай доставчиците на ток и интернет веднъж годишно."],
+  tipsMoney:["Раздели приходите на нужди, желания и спестявания, например 50 / 30 / 20.","Дръж разходите за един месец в лесно достъпна сметка, преди всичко друго.","Следи храната и сметките всяка седмица, а не само в края на месеца.","Погаси дълговете с висока лихва, преди да започнеш да инвестираш."],
+  tipsInvest:["Първо събери резервен фонд, после инвестирай пари, които няма да ти трябват поне 5 години.","Широките индексни фондове с ниски такси разпределят риска между много компании.","Инвестирай редовно фиксирана сума, вместо да гадаеш най-добрия момент.","Това е обща информация, а не личен финансов съвет."],
+  docTos:["Използвайки MyBudget, се съгласяваш да ползваш приложението само за личните си финанси и да пазиш данните си за вход в тайна.","MyBudget показва информация от свързаните ти банки и не премества пари от твое име.","Съветите в приложението са обща информация и не са личен финансов съвет."],
+  docPrivacy:["MyBudget чете баланса и транзакциите ти само след като одобриш достъпа в банката си.","Можеш да премахнеш банка или да изтриеш профила си по всяко време.","Данните ти не се продават на трети страни."],
+  docLegal:["MyBudget е продукт на zaranetwork.","Всички търговски марки, като Revolut, Netflix, Spotify, Amazon Prime и Uber One, принадлежат на своите собственици."]
+}};
+var LANGS=[{id:"en",code:"EN",name:"English",loc:"en-IE"},{id:"bg",code:"BG",name:"Български",loc:"bg-BG"}];
+var COUNTRIES=[
+  {id:"BG",cur:"EUR",vat:20,en:"Bulgaria",bg:"България"},
+  {id:"DE",cur:"EUR",vat:19,en:"Germany",bg:"Германия"},
+  {id:"RO",cur:"RON",vat:21,en:"Romania",bg:"Румъния"},
+  {id:"GR",cur:"EUR",vat:24,en:"Greece",bg:"Гърция"},
+  {id:"ES",cur:"EUR",vat:21,en:"Spain",bg:"Испания"},
+  {id:"FR",cur:"EUR",vat:20,en:"France",bg:"Франция"},
+  {id:"IT",cur:"EUR",vat:22,en:"Italy",bg:"Италия"},
+  {id:"PL",cur:"PLN",vat:23,en:"Poland",bg:"Полша"},
+  {id:"GB",cur:"GBP",vat:20,en:"United Kingdom",bg:"Великобритания"},
+  {id:"US",cur:"USD",vat:null,en:"United States",bg:"САЩ"}
+];
+var PRESETS={consumer:{amt:10000,yrs:5,rate:9},mortgage:{amt:100000,yrs:25,rate:3.5},car:{amt:20000,yrs:5,rate:6}};
+
+var S={
+  user:null,tab:"home",screen:null,mode:"register",sheet:null,lang:"en",draft:{country:"BG"},pending:null,reset:false,
+  banks:[{id:"revolut",name:"Revolut",bal:2184.50,on:true},{id:"myfibank",name:"myfibank",bal:642.18,on:false}],
+  tx:[
+    {b:"revolut",n:"Lidl",e:"🛒",c:"cFood",a:-38.40,d:"today"},
+    {b:"revolut",n:"Spotify",e:"🎵",c:"cSub",a:-10.99,d:"today"},
+    {b:"revolut",n:"Shell",e:"⛽",c:"cTrans",a:-45.30,d:"yesterday"},
+    {b:"revolut",k:"txElec",e:"⚡",c:"cComm",a:-62.10,d:"yesterday"},
+    {b:"myfibank",k:"txWater",e:"💧",c:"cComm",a:-21.75,d:"yesterday"},
+    {b:"revolut",k:"txSalary",e:"💸",c:"cIncome",a:1650.00,d:[9,5]},
+    {b:"myfibank",n:"Kaufland",e:"🛒",c:"cFood",a:-54.20,d:[9,4]},
+    {b:"revolut",n:"Netflix",e:"🎬",c:"cSub",a:-13.99,d:[9,3]},
+    {b:"myfibank",k:"txHeat",e:"🔥",c:"cComm",a:-88.00,d:[9,2]},
+    {b:"revolut",n:"Uber",e:"🚕",c:"cTrans",a:-7.80,d:[9,1]},
+    {b:"revolut",n:"Happy Bar & Grill",e:"🍽️",c:"cFood",a:-42.00,d:[9,1]},
+    {b:"myfibank",k:"txPhone",e:"📱",c:"cComm",a:-18.00,d:[9,1]},
+    {b:"revolut",k:"txPharm",e:"💊",c:"catOther",a:-14.60,d:[8,30]}
+  ],
+  subs:[
+    {id:"prime",name:"Amazon Prime",p:8.99,next:new Date(2026,9,21),active:true},
+    {id:"netflix",name:"Netflix",p:13.99,next:new Date(2026,10,3),active:true},
+    {id:"spotify",name:"Spotify",p:10.99,next:new Date(2026,10,12),active:true},
+    {id:"uber",name:"Uber One",p:9.99,next:new Date(2026,9,27),active:true}
+  ],
+  cats:[{k:"catFood",s:312,m:450},{k:"catComm",s:268,m:300},{k:"catTrans",s:96,m:150},{k:"catOther",s:140,m:200}],
+  goals:[{k:"gEmerg",s:1200,t:3000},{k:"gTrip",s:450,t:900}]
+};
+S.loan={type:"consumer",amt:10000,yrs:5,rate:9,fee:1};
+S.sal={sal:"",fixed:""};
+try{var u=JSON.parse(localStorage.getItem("mybudget_user")||"null");if(u){S.user=u;S.mode="login"}}catch(e){}
+try{var sl=localStorage.getItem("mybudget_lang");if(sl&&L[sl])S.lang=sl}catch(e){}
+try{var th=localStorage.getItem("mybudget_theme");if(th)document.documentElement.setAttribute("data-theme",th)}catch(e){}
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function T(k,v){var s=(L[S.lang]&&L[S.lang][k]!=null)?L[S.lang][k]:L.en[k];if(v&&typeof s==="string")for(var x in v)s=s.split("{"+x+"}").join(v[x]);return s}
+function loc(){return LANGS.filter(function(l){return l.id===S.lang})[0].loc}
+function cinfo(id){return COUNTRIES.filter(function(c){return c.id===id})[0]||COUNTRIES[0]}
+function ccode(){return (S.user&&S.mode==="app"&&S.user.country)||S.draft.country||"BG"}
+function cur(){return cinfo(ccode()).cur}
+function money(n){return new Intl.NumberFormat(loc(),{style:"currency",currency:cur()}).format(n)}
+function sym(){try{return new Intl.NumberFormat(loc(),{style:"currency",currency:cur(),currencyDisplay:"narrowSymbol"}).formatToParts(0).filter(function(p){return p.type==="currency"})[0].value}catch(e){return cur()}}
+function dts(d){return d.toLocaleDateString(loc(),{month:"short",day:"numeric"})}
+function dt(m,d){return dts(new Date(2026,m,d))}
+function when(d){return typeof d==="string"?T(d):dt(d[0],d[1])}
+function setLang(id){S.lang=id;document.documentElement.lang=id;try{localStorage.setItem("mybudget_lang",id)}catch(e){}}
+function isDark(){var d=document.documentElement.getAttribute("data-theme");if(d)return d==="dark";return !!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)}
+function setTheme(dark){document.documentElement.setAttribute("data-theme",dark?"dark":"light");try{localStorage.setItem("mybudget_theme",dark?"dark":"light")}catch(e){}}
+function saveUser(){try{localStorage.setItem("mybudget_user",JSON.stringify(S.user))}catch(e){}}
+document.documentElement.lang=S.lang;
+
+var GEAR='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+var ICON={
+  home:'<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>',
+  budget:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.4 6.4"/></svg>',
+  savings:'<svg viewBox="0 0 24 24"><path d="M4 10c0-3 3-5 7-5s7 2 7 5-1 4-2 5v3h-3v-1H9v1H6v-3c-1-1-2-2-2-5z"/><path d="M19 9h2"/></svg>',
+  services:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>'
+};
+function el(id){return document.getElementById(id)}
+function pct(s,m){return Math.min(100,Math.round(s/m*100))}
+function activeTx(){var on={};S.banks.forEach(function(b){if(b.on)on[b.id]=1});return S.tx.filter(function(t){return on[t.b]})}
+function balance(){return S.banks.reduce(function(a,b){return a+(b.on?b.bal:0)},0)}
+function subsTotal(){return S.subs.reduce(function(a,s){return a+(s.active?s.p:0)},0)}
+function foot(){return '<div class="foot">© 2026 zaranetwork</div>'}
+function maskPhone(p){var d=String(p||"").replace(/\D/g,"");return "•••• "+d.slice(-3)}
+function fld(id,label,attrs,val){return '<div class="field"><label for="'+id+'">'+label+'</label><input id="'+id+'" '+(attrs||"")+' value="'+esc(val)+'"></div>'}
+function numField(id,calc,k,label,val){return '<div class="field"><label for="'+id+'">'+label+'</label><input id="'+id+'" data-calc="'+calc+'" data-k="'+k+'" type="number" inputmode="decimal" min="0" step="any" value="'+esc(val)+'"></div>'}
+function backHdr(title,act){return '<div class="hdr" style="justify-content:flex-start"><button class="icobtn" data-a="'+(act||"back")+'" aria-label="'+T(act==="toset"?"backSet":(act==="backsvc"?"backSvc":"back"))+'">‹</button><h1>'+title+'</h1></div>'}
+function avatar(lg){
+  var n=(S.user&&S.user.name)||T("you");
+  if(S.user&&S.user.photo)return '<img class="avatar'+(lg?" lg":"")+'" src="'+S.user.photo+'" alt="">';
+  return '<div class="ico avatar'+(lg?" lg":"")+'" aria-hidden="true">'+esc(n[0].toUpperCase())+'</div>';
+}
+function countryOptions(sel){return COUNTRIES.map(function(c){return '<option value="'+c.id+'"'+(c.id===sel?" selected":"")+'>'+c[S.lang]+' ('+c.cur+')</option>'}).join("")}
+function themeCard(){
+  var d=isDark();
+  return '<div class="card"><h3>'+T("appearance")+'</h3><div class="row"><div class="grow"><div style="font-weight:500">'+T("dark")+'</div><div class="note">'+T(d?"darkOn":"lightOn")+'</div></div><button class="switch" role="switch" aria-checked="'+d+'" aria-label="'+T("dark")+'" data-a="theme"><i aria-hidden="true">'+(d?"🌙":"☀️")+'</i></button></div></div>';
+}
+function langRow(first){
+  var cur=LANGS.filter(function(l){return l.id===S.lang})[0];
+  return '<button class="linkrow"'+(first?' style="border-top:0;padding-top:0"':'')+' data-a="langsheet"><span class="grow">'+T("language")+'</span><span class="note">'+cur.name+'</span><span class="muted" aria-hidden="true">›</span></button>';
+}
+
+/* ---------- auth ---------- */
+function authSettingsView(){
+  return '<div class="auth">'+backHdr(T("settings"),"authback")+'<div class="card"><h3>'+T("language")+'</h3>'+langRow(true)+'</div>'+themeCard()+foot()+'</div>';
+}
+function verifyView(){
+  var ph=S.pending&&S.pending.user?S.pending.user.phone:(S.user?S.user.phone:"");
+  return '<div class="auth"><div class="hdr"><div class="brand">MyBudget</div></div><h1>'+T("verifyTitle")+'</h1>'+
+  '<p class="muted" style="margin:0">'+T("verifyBody",{p:maskPhone(ph)})+'</p><div class="banner">'+T("verifyDemo")+'</div>'+
+  '<form id="verifyform" class="card" novalidate>'+fld("v-code",T("code"),'inputmode="numeric" autocomplete="one-time-code" maxlength="6"',"")+
+  '<div id="verr" class="note" style="color:var(--warn)" role="alert"></div><button class="btn" type="submit">'+T("verifyBtn")+'</button></form>'+
+  '<button class="btn ghost" data-a="vback">'+T("backBtn")+'</button>'+foot()+'</div>';
+}
+function authView(){
+  if(S.screen==="authsettings")return authSettingsView();
+  if(S.mode==="verify")return verifyView();
+  var reg=S.mode==="register",d=S.draft;
+  var h='<div class="auth"><div class="hdr"><div class="brand">MyBudget</div><button class="icobtn" data-a="authsettings" aria-label="'+T("settings")+'">'+GEAR+'</button></div>'+
+  '<h1>'+T(reg?"heroReg":"heroLogin")+'</h1><p class="muted" style="margin:0">'+T(reg?"subReg":"subLogin")+'</p>'+
+  '<div class="banner">'+T("banner")+'</div><form id="authform" class="card" novalidate>';
+  if(reg)h+=fld("f-name",T("name"),'autocomplete="name" placeholder="'+T("yourName")+'"',d.name);
+  h+=fld("f-email",T("email"),'type="email" autocomplete="email" placeholder="you@example.com"',d.email);
+  if(reg){
+    h+=fld("f-phone",T("phone"),'type="tel" autocomplete="tel" inputmode="tel" placeholder="+359 88 123 4567"',d.phone)+'<div class="note" style="margin-top:-6px">'+T("phoneHint")+'</div>';
+    h+='<div class="field"><label for="f-country">'+T("country")+'</label><select id="f-country">'+countryOptions(d.country||"BG")+'</select></div><div class="note" style="margin-top:-6px">'+T("countryHint")+'</div>';
+  }
+  h+=fld("f-pw",T("password"),'type="password" autocomplete="'+(reg?"new-password":"current-password")+'" placeholder="'+T("pwPh")+'"',d.pw);
+  if(reg)h+='<label class="check-row"><input type="checkbox" id="f-tos"'+(d.tos?" checked":"")+'><span>'+T("accept")+' <button type="button" class="linkbtn" data-a="doc" data-id="tos">'+T("acceptTos")+'</button> '+T("and")+' <button type="button" class="linkbtn" data-a="doc" data-id="privacy">'+T("acceptPriv")+'</button></span></label>';
+  h+='<div id="autherr" class="note" style="color:var(--warn)" role="alert"></div><button class="btn" type="submit">'+T(reg?"create":"login")+'</button></form>'+
+  '<button class="btn ghost" data-a="switch">'+T(reg?"haveAcc":"newAcc")+'</button>'+foot()+'</div>';
+  return h;
+}
+function captureForm(){
+  if(!el("authform"))return;
+  [["name","f-name"],["email","f-email"],["phone","f-phone"],["country","f-country"],["pw","f-pw"]].forEach(function(p){var x=el(p[1]);if(x)S.draft[p[0]]=x.value});
+  var t=el("f-tos");if(t)S.draft.tos=t.checked;
+}
+
+/* ---------- home ---------- */
+function txRow(t){
+  var nm=t.k?T(t.k):t.n;
+  return '<li class="row"><div class="ico emo" aria-hidden="true">'+t.e+'</div><div class="grow"><div style="font-weight:500">'+esc(nm)+'</div><div class="note">'+T(t.c)+' · '+when(t.d)+'</div></div><div class="amt '+(t.a>0?"pos":"neg")+'">'+(t.a>0?"+":"")+money(t.a)+'</div></li>';
+}
+function homeView(){
+  var on=S.banks.filter(function(b){return b.on}).length;
+  var h='<div class="hdr"><div><div class="label">'+esc(T("hello",{n:S.user.name||""}).replace(/,\s*$/,""))+'</div><h1>'+T("overview")+'</h1></div><button class="icobtn" data-a="settings" aria-label="'+T("settings")+'">'+GEAR+'</button></div>';
+  h+='<div class="hero"><div class="label">'+T("totalBalance")+'</div><div class="big">'+money(balance())+'</div><div style="opacity:.85;font-size:13px">'+(on?T(on>1?"bankN":"bank1",{n:on}):T("noBank"))+'</div></div>';
+  h+='<div class="card"><div class="row"><h3 class="grow">'+T("yourBanks")+'</h3><button class="icobtn sm" data-a="addbank" aria-label="'+T("addBank")+'">+</button></div>';
+  S.banks.forEach(function(b){
+    h+='<div class="row"><div class="ico">'+esc(b.name[0].toUpperCase())+'</div><div class="grow"><div style="font-weight:700">'+esc(b.name)+'</div><div class="note num">'+(b.on?money(b.bal)+(b.last4?" · •••• "+esc(b.last4):""):T("notLinked"))+'</div></div>'+
+    '<button class="btn sm '+(b.on?"ghost":"")+'" data-a="bank" data-id="'+esc(b.id)+'">'+T(b.on?"unlink":"link")+'</button></div>';
+  });
+  h+='</div>';
+  var tx=activeTx();
+  h+='<div class="card"><div class="row"><h3 class="grow">'+T("recent")+'</h3><button class="btn sm ghost" data-a="screen" data-id="alltx">'+T("viewAll")+'</button></div>';
+  if(!tx.length)h+='<div class="muted">'+T("linkToSee")+'</div>';
+  else{h+='<ul class="clean">'+tx.slice(0,6).map(txRow).join("")+'</ul>'}
+  return h+'</div>';
+}
+function allTxView(){
+  var tx=activeTx();
+  var h=backHdr(T("allTx"))+'<div class="card">';
+  h+=tx.length?'<ul class="clean">'+tx.map(txRow).join("")+'</ul>':'<div class="muted">'+T("linkToSee")+'</div>';
+  return h+'</div>';
+}
+
+/* ---------- budget ---------- */
+function budgetView(){
+  var spent=S.cats.reduce(function(a,c){return a+c.s},0)+subsTotal(),total=1800;
+  var month=new Date(2026,9,1).toLocaleDateString(loc(),{month:"long"});
+  var h='<div><div class="label">'+month+'</div><h1>'+T("budget")+'</h1></div>';
+  h+='<div class="card"><div class="row"><div class="grow"><div class="label">'+T("spent")+'</div><div class="num" style="font-family:var(--font-display);font-weight:800;font-size:28px">'+money(spent)+'</div></div><div class="note">'+T("ofx",{x:money(total)})+'</div></div><div class="bar"><i style="width:'+pct(spent,total)+'%"></i></div></div>';
+  h+='<div class="card"><h3>'+T("byCat")+'</h3>';
+  S.cats.forEach(function(c){var over=c.s/c.m>.9;
+    h+='<div style="display:flex;flex-direction:column;gap:6px"><div class="row"><div class="grow" style="font-weight:500">'+T(c.k)+'</div>'+(over?'<span class="pill warn">'+T("nearLimit")+'</span>':'')+'<div class="amt">'+money(c.s)+' <span class="muted" style="font-weight:400">/ '+money(c.m)+'</span></div></div><div class="bar '+(over?"over":"")+'"><i style="width:'+pct(c.s,c.m)+'%"></i></div></div>'});
+  h+='</div>';
+  h+='<div class="card"><div class="row"><h3 class="grow">'+T("subs")+'</h3><div class="amt">'+money(subsTotal())+T("perMo")+'</div></div><ul class="clean">';
+  S.subs.forEach(function(s){
+    h+='<li class="row"><div class="ico">'+esc(s.name[0].toUpperCase())+'</div><div class="grow"><div style="font-weight:500">'+esc(s.name)+'</div><div class="note">'+(s.active?money(s.p)+" · "+T("renews",{d:dts(s.next)}):T("cancelled"))+'</div></div>'+
+    (s.active?'<button class="btn sm danger" data-a="cancel" data-id="'+esc(s.id)+'">'+T("cancel")+'</button>':'<span class="pill">'+T("cancelled")+'</span>')+'</li>'});
+  h+='</ul><button class="btn ghost" data-a="addsub">+ '+T("addSub")+'</button><div class="note">'+T("cancelNote")+'</div></div>';
+  return h;
+}
+
+/* ---------- savings ---------- */
+function savingsView(){
+  var tot=S.goals.reduce(function(a,g){return a+g.s},0);
+  var h='<div><div class="label">'+T("goals")+'</div><h1>'+T("savings")+'</h1></div>';
+  h+='<div class="hero"><div class="label">'+T("saved")+'</div><div class="big">'+money(tot)+'</div></div>';
+  S.goals.forEach(function(g,i){
+    var done=g.s>=g.t;
+    h+='<div class="card"><div class="row"><h3 class="grow">'+esc(g.k?T(g.k):g.n)+'</h3><span class="pill">'+(done?T("goalReached"):pct(g.s,g.t)+'%')+'</span></div><div class="bar"><i style="width:'+pct(g.s,g.t)+'%"></i></div><div class="row"><div class="grow note num">'+T("aOfB",{a:money(g.s),b:money(g.t)})+'</div><button class="btn sm" data-a="addmoney" data-i="'+i+'"'+(done?" disabled":"")+'>'+T("addShort")+'</button></div></div>'});
+  return h+'<button class="btn ghost" data-a="newfund">+ '+T("newFund")+'</button>';
+}
+
+/* ---------- services ---------- */
+function servicesView(){
+  var h='<div><div class="label">'+T("learn")+'</div><h1>'+T("services")+'</h1></div>';
+  [["saving","tSaving","tSavingSub"],["money","tMoney","tMoneySub"],["invest","tInvest","tInvestSub"]].forEach(function(t){
+    h+='<button class="tip" data-a="tip" data-id="'+t[0]+'"><div class="ico">'+T(t[1])[0]+'</div><div class="grow"><div style="font-weight:700">'+T(t[1])+'</div><div class="note">'+T(t[2])+'</div></div><span class="muted" aria-hidden="true">›</span></button>'});
+  h+='<div class="divider"></div><div class="tiles">'+[["loan","🏦","tLoan"],["salary","🧮","tSalary"],["feedback","⭐","tFeedback"]].map(function(x){return '<button class="tile" data-a="'+(x[0]==="feedback"?"feedback":"screen")+'" data-id="'+x[0]+'"><span class="emo" aria-hidden="true">'+x[1]+'</span><span>'+T(x[2])+'</span></button>'}).join("")+'</div>';
+  return h;
+}
+function loanView(){
+  var p=S.loan,types=[["consumer","lConsumer"],["mortgage","lMortgage"],["car","lCar"]];
+  var h=backHdr(T("loanTitle"),"backsvc")+'<p class="muted" style="margin:0">'+T("loanHint")+'</p>';
+  h+='<div class="chips" role="group" aria-label="'+T("lType")+'">'+types.map(function(x){return '<button class="chip" data-a="ltype" data-id="'+x[0]+'" aria-pressed="'+(p.type===x[0])+'">'+T(x[1])+'</button>'}).join("")+'</div>';
+  h+='<div class="card">'+numField("l-amt","loan","amt",T("lAmount")+" ("+sym()+")",p.amt)+'<div class="grid2">'+numField("l-yrs","loan","yrs",T("lYears"),p.yrs)+numField("l-rate","loan","rate",T("lRate"),p.rate)+numField("l-fee","loan","fee",T("lFee"),p.fee)+'</div></div>';
+  return h+'<div class="stack" id="calcout">'+loanOut()+'</div>';
+}
+function loanOut(){
+  var p=S.loan,a=+p.amt||0,n=Math.round((+p.yrs||0)*12),r=(+p.rate||0)/100/12;
+  if(a<=0||n<=0)return '<div class="muted">'+T("lEmpty")+'</div>';
+  var pmt=r===0?a/n:a*r/(1-Math.pow(1+r,-n));
+  if(!isFinite(pmt))return '<div class="muted">'+T("lEmpty")+'</div>';
+  var total=pmt*n,interest=total-a,fee=a*(+p.fee||0)/100;
+  return '<div class="hero"><div class="label">'+T("lMonthly")+'</div><div class="big">'+money(pmt)+'</div></div>'+
+    '<div class="card"><div class="row"><div class="grow">'+T("lInterest")+'</div><div class="amt">'+money(interest)+'</div></div><div class="row"><div class="grow">'+T("lFeeAmt")+'</div><div class="amt">'+money(fee)+'</div></div><div class="row"><div class="grow" style="font-weight:700">'+T("lTotal")+'</div><div class="amt">'+money(total+fee)+'</div></div></div>'+
+    '<div class="note">'+T("lNote")+'</div>';
+}
+function salaryView(){
+  var h=backHdr(T("salTitle"),"backsvc")+'<p class="muted" style="margin:0">'+T("salHint")+'</p>';
+  h+='<div class="card">'+numField("s-sal","salary","sal",T("salInput")+" ("+sym()+")",S.sal.sal)+numField("s-fix","salary","fixed",T("salFixedIn")+" ("+sym()+")",S.sal.fixed)+'</div>';
+  return h+'<div class="stack" id="calcout">'+salOut()+'</div>';
+}
+function salOut(){
+  var s=parseFloat(S.sal.sal);
+  if(!(s>0))return '<div class="muted">'+T("salEmpty")+'</div>';
+  var rows=[["💰","salFreedom","salFreedomD",s*150],["📈","salInvest","salInvestD",s*0.10],["🛟","salEmerg","salEmergD",s*6],["🎉","salFun","salFunD",s*0.20],["🏠","salFixed","salFixedD",s*0.70]];
+  var h='<div class="card"><ul class="clean">'+rows.map(function(r){return '<li class="row"><div class="ico emo" aria-hidden="true">'+r[0]+'</div><div class="grow"><div style="font-weight:700">'+T(r[1])+'</div><div class="note">'+T(r[2])+'</div></div><div class="amt">'+money(r[3])+'</div></li>'}).join("")+'</ul></div>';
+  var fx=parseFloat(S.sal.fixed);
+  if(fx>0){
+    if(fx>s*0.70)h+='<div class="banner" role="status">'+T("salOver",{x:money(fx-s*0.70),p:Math.round(fx/s*100)})+'</div>';
+    else h+='<div class="card"><span class="pill">'+T("salOk")+'</span></div>';
+  }
+  return h+'<div class="note">'+T("salNote")+'</div>';
+}
+
+/* ---------- settings & profile ---------- */
+function settingsView(){
+  var n=S.user.name||T("you"),ci=cinfo(S.user.country);
+  var h=backHdr(T("settings"));
+  h+='<div class="card"><h3>'+T("account")+'</h3><div class="row">'+avatar(false)+'<div class="grow"><div style="font-weight:700">'+esc(n)+'</div><div class="note" style="overflow-wrap:anywhere">'+esc(S.user.email)+'</div></div></div>'+
+     '<div class="row note"><div class="grow">'+T("country")+'</div><div class="amt" style="color:var(--ink)">'+ci[S.lang]+' · '+ci.cur+'</div></div>'+
+     '<div class="row note"><div class="grow">'+T("linkedBanks")+'</div><div class="amt" style="color:var(--ink)">'+S.banks.filter(function(b){return b.on}).length+'</div></div>'+
+     '<button class="btn ghost" data-a="screen" data-id="profile">'+T("editProfile")+'</button></div>';
+  h+='<div class="card"><h3>'+T("langLegal")+'</h3>'+langRow(false)+
+     '<button class="linkrow" data-a="doc" data-id="tos"><span class="grow">'+T("tos")+'</span><span class="muted" aria-hidden="true">›</span></button>'+
+     '<button class="linkrow" data-a="doc" data-id="privacy"><span class="grow">'+T("privacy")+'</span><span class="muted" aria-hidden="true">›</span></button>'+
+     '<button class="linkrow" data-a="doc" data-id="legal"><span class="grow">'+T("legal")+'</span><span class="muted" aria-hidden="true">›</span></button></div>';
+  h+=themeCard()+'<button class="btn logout" data-a="logout">'+T("logout")+'</button>';
+  return h;
+}
+function profileView(){
+  var ci=cinfo(S.user.country);
+  var h=backHdr(T("profileTitle"),"toset")+'<div class="banner" role="note">'+T("secure")+'</div>';
+  function row(lead,label,val,f){return '<div class="row">'+lead+'<div class="grow"><div class="note">'+label+'</div><div style="font-weight:700;overflow-wrap:anywhere">'+val+'</div></div><button class="btn sm ghost" data-a="change" data-id="'+f+'">'+T("change")+'</button></div>'}
+  h+='<div class="card">'+row(avatar(true),T("photo"),"","photo")+
+     row('<div class="ico emo" aria-hidden="true">👤</div>',T("username"),esc(S.user.name),"name")+
+     row('<div class="ico emo" aria-hidden="true">✉️</div>',T("email"),esc(S.user.email),"email")+
+     row('<div class="ico emo" aria-hidden="true">🌍</div>',T("country"),ci[S.lang],"country")+'</div>';
+  h+='<div class="card"><h3>'+T("regional")+'</h3><div class="row"><div class="grow">'+T("currencyLine",{c:ci.cur})+'</div></div><div class="row"><div class="grow">'+(ci.vat?T("vatLine",{v:ci.vat}):T("noVat"))+'</div></div><div class="note">'+T("regNote")+'</div></div>';
+  return h;
+}
+
+/* ---------- sheets ---------- */
+function errBox(){return '<div id="sheeterr" class="note" style="color:var(--warn)" role="alert"></div>'}
+function changeSheet(sh){
+  var f=sh.field,titles={name:"chTitleName",email:"chTitleEmail",photo:"chTitlePhoto",country:"chTitleCountry"},warns={name:"wName",email:"wEmail",photo:"wPhoto",country:"wCountry"};
+  var h='<h2>'+T(titles[f])+'</h2>';
+  if(sh.step==="input"){
+    h+='<div class="banner" role="note">⚠️ '+T(warns[f])+'</div><div class="note">'+T("wCode")+'</div>';
+    if(f==="name")h+=fld("c-val",T("newName"),'autocomplete="name"',S.user.name);
+    if(f==="email")h+=fld("c-val",T("newEmail"),'type="email" autocomplete="email"',"");
+    if(f==="country")h+='<div class="field"><label for="c-val">'+T("newCountry")+'</label><select id="c-val">'+countryOptions(S.user.country)+'</select></div>';
+    if(f==="photo")h+='<img id="c-prev" class="preview" alt="" '+(sh.val?'src="'+sh.val+'"':'hidden')+'><div class="field"><label for="c-file">'+T("choosePhoto")+'</label><input id="c-file" type="file" accept="image/*"></div>';
+    h+=errBox()+'<button class="btn" data-a="chnext">'+T("cont")+'</button><button class="btn ghost" data-a="close">'+T("cancel")+'</button>';
+  }else if(sh.step==="verify"){
+    h+='<p class="muted" style="margin:0">'+T("verifyBody",{p:maskPhone(S.user.phone)})+'</p><div class="banner">'+T("verifyDemo")+'</div>'+fld("v-code",T("code"),'inputmode="numeric" autocomplete="one-time-code" maxlength="6"',"")+errBox()+
+       '<button class="btn" data-a="chverify">'+T("verifySave")+'</button><button class="btn ghost" data-a="close">'+T("cancel")+'</button>';
+  }else{
+    h+='<p style="margin:0;font-weight:700">✓ '+T("savedOk")+'</p><button class="btn" data-a="close">'+T("done")+'</button>';
+  }
+  return h;
+}
+function sheetView(){
+  var sh=S.sheet;if(!sh)return"";
+  var h='<div class="sheet-bg" data-a="close"><div class="sheet" role="dialog" aria-modal="true">';
+  if(sh.type==="lang"){
+    h+='<h2>'+T("language")+'</h2><div class="note">'+T("langHint")+'</div><table class="langtable"><tbody>';
+    LANGS.forEach(function(l){h+='<tr><td><button class="langbtn" data-a="lang" data-id="'+l.id+'"><span class="code">'+l.code+'</span><span class="grow" style="font-weight:'+(l.id===S.lang?700:500)+'">'+l.name+'</span>'+(l.id===S.lang?'<span class="check" aria-label="selected">✓</span>':'')+'</button></td></tr>'});
+    h+='</tbody></table><button class="btn ghost" data-a="close">'+T("done")+'</button>';
+  }else if(sh.type==="doc"){
+    var dm={tos:["tos","docTos"],privacy:["privacy","docPrivacy"],legal:["legal","docLegal"]}[sh.id];
+    h+='<h2>'+T(dm[0])+'</h2><ul class="clean">';T(dm[1]).forEach(function(i){h+='<li>'+i+'</li>'});
+    h+='</ul><div class="note">'+T("sample")+'</div><button class="btn" data-a="close">'+T("done")+'</button>';
+  }else if(sh.type==="feedback"){
+    h+='<h2>⭐ '+T("fbTitle")+'</h2><p class="muted" style="margin:0">'+T("fbBody")+'</p><button class="btn" data-a="close">'+T("done")+'</button>';
+  }else if(sh.type==="addbank"){
+    h+='<h2>'+T("addBank")+'</h2><div class="banner" role="note">'+T("bankNote")+'</div>'+fld("b-name",T("bankName"),'placeholder="'+T("bankNamePh")+'" autocomplete="off"',"")+fld("b-iban",T("iban"),'placeholder="BG80 BNBG 9661 1020 3456 78" autocomplete="off" autocapitalize="characters"',"")+errBox()+
+       '<button class="btn" data-a="bankadd">'+T("addBankBtn")+'</button><button class="btn ghost" data-a="close">'+T("cancel")+'</button>';
+  }else if(sh.type==="addsub"){
+    h+='<h2>'+T("addSub")+'</h2>'+fld("s-name",T("subName"),'placeholder="'+T("subNamePh")+'" autocomplete="off"',"")+
+       '<div class="grid2">'+numField("s-price","","",T("subPrice")+" ("+sym()+")","").replace(' data-calc="" data-k=""',"")+fld("s-date",T("subNext"),'type="date"',"")+'</div>'+errBox()+
+       '<button class="btn" data-a="subadd">'+T("addShort")+'</button><button class="btn ghost" data-a="close">'+T("cancel")+'</button>';
+  }else if(sh.type==="newfund"){
+    h+='<h2>'+T("newFund")+'</h2>'+fld("n-name",T("fundName"),'placeholder="'+T("fundNamePh")+'" autocomplete="off"',"")+
+       numField("n-target","","",T("fundTarget")+" ("+sym()+")","").replace(' data-calc="" data-k=""',"")+errBox()+
+       '<button class="btn" data-a="fundadd">'+T("createFund")+'</button><button class="btn ghost" data-a="close">'+T("cancel")+'</button>';
+  }else if(sh.type==="addmoney"){
+    var g=S.goals[sh.i],rem=Math.max(0,g.t-g.s),step=rem>2000?25:(rem>=20?5:1),start=Math.min(50,rem);
+    h+='<h2>'+T("addTo",{n:esc(g.k?T(g.k):g.n)})+'</h2><p class="muted" style="margin:0">'+T("howMuch")+'</p>'+
+       '<div class="field"><label for="m-amt">'+T("amountBox")+' ('+sym()+')</label><input id="m-amt" type="number" inputmode="decimal" min="0" max="'+rem+'" step="any" value="'+start+'"></div>'+
+       '<input id="m-range" type="range" min="0" max="'+rem+'" step="'+step+'" value="'+start+'" aria-label="'+T("amountBox")+'">'+
+       '<div class="scale"><span>'+money(0)+'</span><span>'+money(Math.round(rem/2))+'</span><span>'+money(rem)+'</span></div>'+
+       '<div class="note">'+T("remaining",{x:money(rem)})+'</div>'+errBox()+
+       '<button class="btn" data-a="moneyadd" data-i="'+sh.i+'">'+T("confirmAdd")+'</button><button class="btn ghost" data-a="close">'+T("cancel")+'</button>';
+  }else if(sh.type==="change"){
+    h+=changeSheet(sh);
+  }else if(sh.type==="cancel"){var s=S.subs.filter(function(x){return x.id===sh.id})[0];
+    h+='<h2>'+T("cancelQ",{s:esc(s.name)})+'</h2><p class="muted" style="margin:0">'+T("cancelBody",{x:money(s.p),s:esc(s.name)})+'</p><button class="btn danger" data-a="confirm" data-id="'+esc(s.id)+'">'+T("yesCancel")+'</button><button class="btn ghost" data-a="close">'+T("keep")+'</button>';
+  }else{var key={saving:["tSaving","tipsSaving"],money:["tMoney","tipsMoney"],invest:["tInvest","tipsInvest"]}[sh.id];
+    h+='<h2>'+T(key[0])+'</h2><ul class="clean">';T(key[1]).forEach(function(i){h+='<li>'+i.split("{c50}").join(money(50))+'</li>'});h+='</ul><button class="btn" data-a="close">'+T("done")+'</button>'}
+  return h+'</div></div>';
+}
+
+/* ---------- render ---------- */
+function render(){
+  var app=el("app"),sc=el("scroll");
+  var keep=(!S.reset&&sc)?sc.scrollTop:0;S.reset=false;
+  if(!S.user||S.mode!=="app"){app.innerHTML=authView()+sheetView();return}
+  var views={settings:settingsView,profile:profileView,alltx:allTxView,loan:loanView,salary:salaryView};
+  var body=views[S.screen]?views[S.screen]():{home:homeView,budget:budgetView,savings:savingsView,services:servicesView}[S.tab]();
+  var tabs=[["home","tabHome"],["budget","tabBudget"],["savings","tabSavings"],["services","tabServices"]];
+  var noTab=(S.screen==="settings"||S.screen==="profile");
+  app.innerHTML='<div class="scroll" id="scroll">'+body+foot()+'</div>'+
+    '<nav class="tabbar" aria-label="Main">'+tabs.map(function(t){return '<button class="tab" data-a="tab" data-id="'+t[0]+'" aria-current="'+(!noTab&&S.tab===t[0])+'">'+ICON[t[0]]+'<span>'+T(t[1])+'</span></button>'}).join("")+'</nav>'+sheetView();
+  var ns=el("scroll");if(ns&&keep)ns.scrollTop=keep;
+}
+
+/* ---------- events ---------- */
+function finishLogin(){S.mode="app";S.tab="home";S.screen=null;S.pending=null;S.draft={country:"BG"};S.reset=true;render()}
+document.addEventListener("submit",function(e){
+  var id=e.target.id;
+  if(id==="verifyform"){
+    e.preventDefault();
+    if(el("v-code").value.trim()!==DEMO_CODE){el("verr").textContent=T("errCode");return}
+    if(S.pending&&S.pending.kind==="register"){S.user=S.pending.user;saveUser()}
+    finishLogin();return;
+  }
+  if(id!=="authform")return;
+  e.preventDefault();
+  captureForm();
+  var d=S.draft,er=el("autherr"),em=(d.email||"").trim(),pw=d.pw||"";
+  if(S.mode==="register"){
+    var nm=(d.name||"").trim(),ph=(d.phone||"").trim();
+    if(!nm){er.textContent=T("errName");return}
+    if(!/^\S+@\S+\.\S+$/.test(em)){er.textContent=T("errEmail");return}
+    if(!/^\+?[\d\s()-]{7,20}$/.test(ph)||ph.replace(/\D/g,"").length<7){er.textContent=T("errPhone");return}
+    if(pw.length<6){er.textContent=T("errPw");return}
+    if(!d.tos){er.textContent=T("errTos");return}
+    S.pending={kind:"register",user:{name:nm,email:em,phone:ph,country:d.country||"BG"}};
+  }else{
+    if(!/^\S+@\S+\.\S+$/.test(em)){er.textContent=T("errEmail");return}
+    if(pw.length<6){er.textContent=T("errPw");return}
+    if(!S.user||S.user.email!==em){er.textContent=T("errNoAcc");return}
+    if(!S.user.country)S.user.country="BG";
+    S.pending={kind:"login"};
+  }
+  S.mode="verify";render();
+});
+document.addEventListener("input",function(e){
+  var t=e.target;
+  if(t.id==="m-range"){el("m-amt").value=t.value;return}
+  if(t.id==="m-amt"){var r=el("m-range");if(r)r.value=t.value;return}
+  var c=t.getAttribute&&t.getAttribute("data-calc");if(!c)return;
+  var k=t.getAttribute("data-k");
+  if(c==="loan")S.loan[k]=t.value===""?0:parseFloat(t.value);else S.sal[k]=t.value;
+  var out=el("calcout");if(out)out.innerHTML=c==="loan"?loanOut():salOut();
+});
+document.addEventListener("change",function(e){
+  var t=e.target;
+  if(t.id==="c-file"&&t.files&&t.files[0]){
+    var fr=new FileReader();
+    fr.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement("canvas"),sz=160;c.width=sz;c.height=sz;
+        var side=Math.min(img.width,img.height),sx=(img.width-side)/2,sy=(img.height-side)/2;
+        c.getContext("2d").drawImage(img,sx,sy,side,side,0,0,sz,sz);
+        var url=c.toDataURL("image/jpeg",0.8);
+        if(S.sheet&&S.sheet.type==="change"){S.sheet.val=url;var p=el("c-prev");if(p){p.src=url;p.hidden=false}}
+      };
+      img.src=fr.result;
+    };
+    fr.readAsDataURL(t.files[0]);
+  }
+});
+document.addEventListener("click",function(e){
+  var t=e.target.closest("[data-a]");if(!t)return;var a=t.getAttribute("data-a"),id=t.getAttribute("data-id");
+  if(a==="close"&&e.target.closest(".sheet")&&!e.target.closest("button"))return;
+  if(S.mode!=="app")captureForm();
+  if(["tab","screen","back","toset","settings","logout","authsettings","authback","switch","vback"].indexOf(a)>-1)S.reset=true;
+  function err(m){var b=el("sheeterr");if(b)b.textContent=T(m)}
+  if(a==="switch"){S.mode=S.mode==="register"?"login":"register"}
+  else if(a==="vback"){S.mode=S.pending&&S.pending.kind==="register"?"register":"login";S.pending=null}
+  else if(a==="authsettings"){S.screen="authsettings"}
+  else if(a==="authback"){S.screen=null}
+  else if(a==="tab"){S.tab=id;S.screen=null}
+  else if(a==="settings"){S.screen="settings"}
+  else if(a==="back"){S.screen=null}
+  else if(a==="backsvc"){S.screen=null}
+  else if(a==="toset"){S.screen="settings"}
+  else if(a==="screen"){S.screen=id}
+  else if(a==="feedback"){S.sheet={type:"feedback"}}
+  else if(a==="ltype"){var pr=PRESETS[id];S.loan={type:id,amt:pr.amt,yrs:pr.yrs,rate:pr.rate,fee:S.loan.fee}}
+  else if(a==="theme"){setTheme(!isDark())}
+  else if(a==="langsheet"){S.sheet={type:"lang"}}
+  else if(a==="lang"){setLang(id);S.sheet=null}
+  else if(a==="doc"){S.sheet={type:"doc",id:id}}
+  else if(a==="bank"){S.banks.forEach(function(b){if(b.id===id)b.on=!b.on})}
+  else if(a==="addbank"){S.sheet={type:"addbank"}}
+  else if(a==="bankadd"){
+    var bn=el("b-name").value.trim(),ib=el("b-iban").value.replace(/\s/g,"").toUpperCase();
+    if(!bn||!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(ib)){err("errBank");return}
+    S.banks.push({id:"b"+Date.now(),name:bn,bal:1250,on:true,last4:ib.slice(-4)});S.sheet=null;
+  }
+  else if(a==="cancel"){S.sheet={type:"cancel",id:id}}
+  else if(a==="confirm"){S.subs.forEach(function(s){if(s.id===id)s.active=false});S.sheet=null}
+  else if(a==="addsub"){S.sheet={type:"addsub"}}
+  else if(a==="subadd"){
+    var sn=el("s-name").value.trim(),sp=parseFloat(el("s-price").value),dv=el("s-date").value;
+    if(!sn||!(sp>0)){err("errSub");return}
+    S.subs.push({id:"u"+Date.now(),name:sn,p:sp,next:dv?new Date(dv+"T00:00:00"):new Date(2026,10,12),active:true});S.sheet=null;
+  }
+  else if(a==="tip"){S.sheet={type:"tip",id:id}}
+  else if(a==="newfund"){S.sheet={type:"newfund"}}
+  else if(a==="fundadd"){
+    var fn=el("n-name").value.trim(),ft=parseFloat(el("n-target").value);
+    if(!fn||!(ft>0)){err("errFund");return}
+    S.goals.push({n:fn,s:0,t:ft});S.sheet=null;
+  }
+  else if(a==="addmoney"){S.sheet={type:"addmoney",i:+t.getAttribute("data-i")}}
+  else if(a==="moneyadd"){
+    var g=S.goals[+t.getAttribute("data-i")],am=parseFloat(el("m-amt").value);
+    if(!(am>0)){err("errAmt");return}
+    g.s=Math.min(g.t,g.s+am);S.sheet=null;
+  }
+  else if(a==="change"){S.sheet={type:"change",field:id,step:"input",val:null}}
+  else if(a==="chnext"){
+    var f=S.sheet.field,v;
+    if(f==="photo"){v=S.sheet.val;if(!v){err("errPhoto");return}}
+    else{v=el("c-val").value.trim();
+      if(f==="name"&&!v){err("errName");return}
+      if(f==="email"&&!/^\S+@\S+\.\S+$/.test(v)){err("errEmail");return}}
+    S.sheet.val=v;S.sheet.step="verify";
+  }
+  else if(a==="chverify"){
+    if(el("v-code").value.trim()!==DEMO_CODE){err("errCode");return}
+    var fd=S.sheet.field;
+    if(fd==="name")S.user.name=S.sheet.val;
+    if(fd==="email")S.user.email=S.sheet.val;
+    if(fd==="photo")S.user.photo=S.sheet.val;
+    if(fd==="country")S.user.country=S.sheet.val;
+    saveUser();S.sheet.step="done";
+  }
+  else if(a==="close"){S.sheet=null}
+  else if(a==="logout"){S.mode="login";S.sheet=null;S.screen=null;S.tab="home"}
+  render();
+});
+render();
+})();
+</script>
+<style>
+/* iPhone web-app tweaks */
+input,select,textarea{font-size:16px}
+*{-webkit-tap-highlight-color:transparent}
+button,.tab,.tile,.chip,.tip,.linkrow,.langbtn{touch-action:manipulation}
+html,body{overscroll-behavior:none;-webkit-text-size-adjust:100%}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,select,textarea{-webkit-user-select:text;user-select:text}
+</style>
+<script>if("serviceWorker"in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/prototype/sw.js").catch(function(){})})}</script>
+</body></html>
